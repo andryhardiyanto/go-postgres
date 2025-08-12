@@ -9,6 +9,7 @@ A PostgreSQL library built on top of sqlx with focus on performance, security, a
 - **Memory Safe**: Prepared statements automatically closed to prevent memory leaks
 - **Type Safety**: Custom types for PostgreSQL arrays
 - **Parameter Binding**: Named parameters to prevent SQL injection
+- **Debug Mode**: Query debugging with parameter substitution for development
 
 ## 🚀 Quick Start
 

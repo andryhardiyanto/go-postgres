@@ -8,11 +8,11 @@ import (
 
 // execQuery is a query that executes a statement against the database.
 type execQuery struct {
-	p        *postgres
-	query    string
-	kv       []any
-	pipeline *pipeline
-	debug    bool
+	postgres      *postgres
+	query         string
+	keyValuePairs []any
+	pipeline      *pipeline
+	debug         bool
 }
 
 // ExecResult is the result of an exec query.
@@ -23,20 +23,20 @@ type ExecResult struct {
 type Exec interface {
 	Debug() Exec
 	Exec(ctx context.Context) (any, error)
-	ExecInTx(ctx context.Context) (res *ExecResult, err error)
-	Insert(query string, kv ...any) Exec
-	Update(query string, kv ...any) Exec
-	Delete(query string, kv ...any) Exec
+	ExecInTx(ctx context.Context) (result *ExecResult, err error)
+	Insert(query string, keyValuePairs ...any) Exec
+	Update(query string, keyValuePairs ...any) Exec
+	Delete(query string, keyValuePairs ...any) Exec
 	Wrap(exec Exec) Exec
 	FromResult(from string) string
 }
 
-func newExecQuery(p *postgres, query string, kv []any) Exec {
+func newExecQuery(postgresInstance *postgres, query string, keyValuePairs []any) Exec {
 	return &execQuery{
-		p:        p,
-		query:    query,
-		kv:       kv,
-		pipeline: NewPipeline(),
+		postgres:      postgresInstance,
+		query:         query,
+		keyValuePairs: keyValuePairs,
+		pipeline:      NewPipeline(),
 	}
 }
 
@@ -46,78 +46,79 @@ func (e *execQuery) Debug() Exec {
 }
 
 func (e *execQuery) FromResult(from string) string {
-	return e.p.FromResult(e.pipeline.uniqueQuery(from))
+	return e.postgres.FromResult(e.pipeline.uniqueQuery(from))
 }
 func (e *execQuery) Exec(ctx context.Context) (any, error) {
 	if e.pipeline.isTrans() {
-		return 0, errors.New("transaction please use ExecInTx()")
+		return 0, errors.New("invalid operation: this query is part of a transaction pipeline. Please use ExecInTx() method instead of Exec() to execute transaction-based queries")
 	}
-	arg, err := Pairs(e.kv)
+	arguments, err := Pairs(e.keyValuePairs)
 	if err != nil {
 		return 0, err
 	}
 
-	if e.p.debug {
-		debugQuery(e.query, arg, ctx)
+	// Debug query if either global debug or instance debug is enabled
+	if e.debug {
+		debugQuery(e.query, arguments)
 	}
 
 	if queryType(e.query) == qInsert {
-		return insert(ctx, e.p.database, e.query, arg)
+		return insert(ctx, e.postgres.database, e.query, arguments)
 	} else if queryType(e.query) == qDelete {
-		return nil, delete(ctx, e.p.database, e.query, arg)
+		return nil, delete(ctx, e.postgres.database, e.query, arguments)
 	}
-	return nil, update(ctx, e.p.database, e.query, arg)
+	return nil, update(ctx, e.postgres.database, e.query, arguments)
 }
 
-func (e *execQuery) ExecInTx(ctx context.Context) (res *ExecResult, err error) {
+func (e *execQuery) ExecInTx(ctx context.Context) (result *ExecResult, err error) {
 	if !e.pipeline.isTrans() {
-		return nil, errors.New("not transaction please use Exec()")
+		return nil, errors.New("invalid operation: no transaction pipeline found. Please use Insert(), Update(), or Delete() methods to build a transaction pipeline before calling ExecInTx()")
 	}
-	e.pipeline.addFirstPipeline(e.query, e.kv)
+	e.pipeline.addFirstPipeline(e.query, e.keyValuePairs)
 
-	tx, err := e.p.database.Beginx()
+	transaction, err := e.postgres.database.Beginx()
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
-		if p := recover(); p != nil {
-			_ = tx.Rollback()
-			panic(p)
+		if panicValue := recover(); panicValue != nil {
+			_ = transaction.Rollback()
+			panic(panicValue)
 		} else if err != nil {
-			_ = tx.Rollback()
+			_ = transaction.Rollback()
 		} else {
-			err = tx.Commit()
+			err = transaction.Commit()
 		}
 	}()
 
-	res, err = e.pipeline.runPipeline(ctx, tx)
+	result, err = e.pipeline.runPipeline(ctx, transaction, e.debug)
 
 	return
 }
 
 func (e *execQuery) Wrap(exec Exec) Exec {
-	ex, ok := exec.(*execQuery)
-	if !ok || ex == nil {
+	execQuery, ok := exec.(*execQuery)
+	if !ok || execQuery == nil {
 		return e
 	}
-	ex.query = e.pipeline.uniqueQuery(ex.query)
-	ex.pipeline.addFirstPipeline(ex.query, ex.kv)
-	e.pipeline.appendPipeline(ex.pipeline)
+	execQuery.query = e.pipeline.uniqueQuery(execQuery.query)
+	execQuery.pipeline.addFirstPipeline(execQuery.query, execQuery.keyValuePairs)
+	e.pipeline.appendPipeline(execQuery.pipeline)
 	return e
 }
 
-func (e *execQuery) Insert(query string, kv ...any) Exec {
-	e.pipeline.addPipeline(query, kv)
+func (e *execQuery) Insert(query string, keyValuePairs ...any) Exec {
+	e.pipeline.addPipeline(query, keyValuePairs)
 	return e
 }
 
-func (e *execQuery) Update(query string, kv ...any) Exec {
-	e.pipeline.addPipeline(query, kv)
+func (e *execQuery) Update(query string, keyValuePairs ...any) Exec {
+	e.pipeline.addPipeline(query, keyValuePairs)
 	return e
 }
 
-func (e *execQuery) Delete(query string, kv ...any) Exec {
-	e.pipeline.addPipeline(query, kv)
+func (e *execQuery) Delete(query string, keyValuePairs ...any) Exec {
+	e.pipeline.addPipeline(query, keyValuePairs)
 	return e
 }
 

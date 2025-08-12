@@ -7,12 +7,12 @@ import (
 
 // selectQuery is a query that selects data from the database.
 type selectQuery struct {
-	p     *postgres
-	query string
-	kv    []any
-	dest  any
-	arg   map[string]any
-	debug bool
+	postgres      *postgres
+	query         string
+	keyValuePairs []any
+	destination   any
+	arguments     map[string]any
+	debug         bool
 }
 
 // Select is an interface for selecting data from the database.
@@ -23,28 +23,33 @@ type Select interface {
 }
 
 // Select is a query that selects data from the database.
-func (q *selectQuery) Debug() Select {
-	q.debug = true
-	return q
+func (query *selectQuery) Debug() Select {
+	query.debug = true
+	return query
 }
 
 // One selects a single row from the database.
-func (q *selectQuery) One(ctx context.Context) (found bool, err error) {
-	// Convert kv to arg map
-	if q.arg == nil {
-		q.arg, err = Pairs(q.kv)
+func (query *selectQuery) One(ctx context.Context) (found bool, err error) {
+	// Convert keyValuePairs to arguments map
+	if query.arguments == nil {
+		query.arguments, err = Pairs(query.keyValuePairs)
 		if err != nil {
 			return false, err
 		}
 	}
 
-	prep, err := q.p.database.PrepareNamedContext(ctx, q.query)
+	// Debug query if either global debug or instance debug is enabled
+	if query.debug {
+		debugQuery(query.query, query.arguments)
+	}
+
+	preparedStatement, err := query.postgres.database.PrepareNamedContext(ctx, query.query)
 	if err != nil {
 		return false, err
 	}
-	defer prep.Close()
+	defer preparedStatement.Close()
 
-	err = prep.GetContext(ctx, q.dest, q.arg)
+	err = preparedStatement.GetContext(ctx, query.destination, query.arguments)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil
@@ -55,22 +60,27 @@ func (q *selectQuery) One(ctx context.Context) (found bool, err error) {
 }
 
 // Many selects multiple rows from the database.
-func (q *selectQuery) Many(ctx context.Context) (found bool, err error) {
-	// Convert kv to arg map
-	if q.arg == nil {
-		q.arg, err = Pairs(q.kv)
+func (query *selectQuery) Many(ctx context.Context) (found bool, err error) {
+	// Convert keyValuePairs to arguments map
+	if query.arguments == nil {
+		query.arguments, err = Pairs(query.keyValuePairs)
 		if err != nil {
 			return false, err
 		}
 	}
 
-	prep, err := q.p.database.PrepareNamedContext(ctx, q.query)
+	// Debug query if either global debug or instance debug is enabled
+	if query.debug {
+		debugQuery(query.query, query.arguments)
+	}
+
+	preparedStatement, err := query.postgres.database.PrepareNamedContext(ctx, query.query)
 	if err != nil {
 		return false, err
 	}
-	defer prep.Close()
+	defer preparedStatement.Close()
 
-	err = prep.SelectContext(ctx, q.dest, q.arg) // Use SelectContext for slice results
+	err = preparedStatement.SelectContext(ctx, query.destination, query.arguments) // Use SelectContext for slice results
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil
