@@ -153,51 +153,51 @@ func insert(ctx context.Context, database *sqlx.DB, query string, arguments map[
 }
 
 // update updates data in the database
-func update(ctx context.Context, database *sqlx.DB, query string, arguments map[string]any) error {
+func update(ctx context.Context, database *sqlx.DB, query string, arguments map[string]any) (int64, error) {
 	preparedStatement, err := database.PrepareNamedContext(ctx, query)
 	if err != nil {
-		return errors.WithStack(err)
+		return 0, errors.WithStack(err)
 	}
 	defer preparedStatement.Close()
 
 	result, err := preparedStatement.ExecContext(ctx, arguments)
 	if err != nil {
-		return errors.WithStack(err)
+		return 0, errors.WithStack(err)
 	}
 
-	_, err = result.RowsAffected()
+	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil
+			return 0, nil
 		}
-		return errors.WithStack(err)
+		return 0, errors.WithStack(err)
 	}
 
-	return nil
+	return rowsAffected, nil
 }
 
 // delete deletes data from the database
-func delete(ctx context.Context, database *sqlx.DB, query string, arguments map[string]any) error {
+func delete(ctx context.Context, database *sqlx.DB, query string, arguments map[string]any) (int64, error) {
 	preparedStatement, err := database.PrepareNamedContext(ctx, query)
 	if err != nil {
-		return errors.WithStack(err)
+		return 0, errors.WithStack(err)
 	}
 	defer preparedStatement.Close()
 
 	result, err := preparedStatement.ExecContext(ctx, arguments)
 	if err != nil {
-		return errors.WithStack(err)
+		return 0, errors.WithStack(err)
 	}
 
-	_, err = result.RowsAffected()
+	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil
+			return 0, nil
 		}
-		return errors.WithStack(err)
+		return 0, errors.WithStack(err)
 	}
 
-	return nil
+	return rowsAffected, nil
 }
 
 func (s *StringSlice) Scan(src any) error {

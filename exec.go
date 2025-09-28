@@ -27,6 +27,7 @@ type Exec interface {
 	Insert(query string, keyValuePairs ...any) Exec
 	Update(query string, keyValuePairs ...any) Exec
 	Delete(query string, keyValuePairs ...any) Exec
+	Select(query string, destination any, keyValuePairs ...any) Exec
 	Wrap(exec Exec) Exec
 	FromResult(from string) string
 }
@@ -65,9 +66,9 @@ func (e *execQuery) Exec(ctx context.Context) (any, error) {
 	if queryType(e.query) == qInsert {
 		return insert(ctx, e.postgres.database, e.query, arguments)
 	} else if queryType(e.query) == qDelete {
-		return nil, delete(ctx, e.postgres.database, e.query, arguments)
+		return delete(ctx, e.postgres.database, e.query, arguments)
 	}
-	return nil, update(ctx, e.postgres.database, e.query, arguments)
+	return update(ctx, e.postgres.database, e.query, arguments)
 }
 
 func (e *execQuery) ExecInTx(ctx context.Context) (result *ExecResult, err error) {
@@ -121,7 +122,10 @@ func (e *execQuery) Delete(query string, keyValuePairs ...any) Exec {
 	e.pipeline.addPipeline(query, keyValuePairs)
 	return e
 }
-
+func (e *execQuery) Select(query string, destination any, keyValuePairs ...any) Exec {
+	e.pipeline.addPipeline(query, keyValuePairs)
+	return e
+}
 func (e *ExecResult) TxResult(query string) any {
 	return e.ids[query]
 }
