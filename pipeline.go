@@ -80,9 +80,9 @@ func (p *pipeline) runPipeline(ctx context.Context, tx *sqlx.Tx, debug bool) (*E
 		case strings.EqualFold(queryType, qInsert):
 			queryID, err = insertTx(ctx, tx, query, arguments)
 		case strings.EqualFold(queryType, qDelete):
-			err = deleteTx(ctx, tx, query, arguments)
+			queryID, err = deleteTx(ctx, tx, query, arguments)
 		default:
-			err = updateTx(ctx, tx, query, arguments)
+			queryID, err = updateTx(ctx, tx, query, arguments)
 		}
 
 		if err != nil {

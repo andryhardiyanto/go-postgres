@@ -83,51 +83,51 @@ func insertTx(ctx context.Context, transaction *sqlx.Tx, query string, arguments
 }
 
 // updateTx updates data in the database using a transaction
-func updateTx(ctx context.Context, transaction *sqlx.Tx, query string, arguments map[string]any) error {
+func updateTx(ctx context.Context, transaction *sqlx.Tx, query string, arguments map[string]any) (int64, error) {
 	preparedStatement, err := transaction.PrepareNamedContext(ctx, query)
 	if err != nil {
-		return errors.WithStack(err)
+		return 0, errors.WithStack(err)
 	}
 	defer preparedStatement.Close()
 
 	result, err := preparedStatement.ExecContext(ctx, arguments)
 	if err != nil {
-		return errors.WithStack(err)
+		return 0, errors.WithStack(err)
 	}
 
-	_, err = result.RowsAffected()
+	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil
+			return 0, nil
 		}
-		return errors.WithStack(err)
+		return 0, errors.WithStack(err)
 	}
 
-	return nil
+	return rowsAffected, nil
 }
 
 // deleteTx deletes data from the database using a transaction
-func deleteTx(ctx context.Context, transaction *sqlx.Tx, query string, arguments map[string]any) error {
+func deleteTx(ctx context.Context, transaction *sqlx.Tx, query string, arguments map[string]any) (int64, error) {
 	preparedStatement, err := transaction.PrepareNamedContext(ctx, query)
 	if err != nil {
-		return errors.WithStack(err)
+		return 0, errors.WithStack(err)
 	}
 	defer preparedStatement.Close()
 
 	result, err := preparedStatement.ExecContext(ctx, arguments)
 	if err != nil {
-		return errors.WithStack(err)
+		return 0, errors.WithStack(err)
 	}
 
-	_, err = result.RowsAffected()
+	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil
+			return 0, nil
 		}
-		return errors.WithStack(err)
+		return 0, errors.WithStack(err)
 	}
 
-	return nil
+	return rowsAffected, nil
 }
 
 // insert inserts data into the database
