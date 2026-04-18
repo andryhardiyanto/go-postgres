@@ -7,8 +7,6 @@ import (
 	_ "github.com/newrelic/go-agent/v3/integrations/nrpq"
 )
 
-const size = 512
-
 // New creates a new postgres client
 func New(opts ...Option) (Postgres, error) {
 	cfg := &config{}

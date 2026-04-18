@@ -1,6 +1,6 @@
 module github.com/andryhardiyanto/go-postgres
 
-go 1.24.3
+go 1.26.2
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.18.3
@@ -10,4 +10,8 @@ require (
 	github.com/pkg/errors v0.9.1
 )
 
-require github.com/newrelic/go-agent/v3 v3.3.0 // indirect
+require (
+	github.com/andryhardiyanto/go-async v1.0.0 // indirect
+	github.com/newrelic/go-agent/v3 v3.3.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+)
