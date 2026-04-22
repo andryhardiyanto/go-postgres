@@ -9,6 +9,7 @@ A PostgreSQL library built on top of sqlx with focus on performance, security, a
 - **Memory Safe**: Prepared statements automatically closed to prevent memory leaks
 - **Type Safety**: Custom types for PostgreSQL arrays
 - **Parameter Binding**: Named parameters to prevent SQL injection
+- **Pagination**: High-performance Offset and Cursor-based pagination with generic types
 - **Debug Mode**: Query debugging with parameter substitution for development
 
 ## 🚀 Quick Start
@@ -79,6 +80,50 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
+}
+```
+
+## 📑 Pagination
+
+The library provides robust pagination support using both Offset and Cursor-based strategies, leveraging Go generics for type safety.
+
+### Offset Pagination
+Ideal for simple lists where data doesn't change frequently and page jumping is required.
+
+```go
+pagination := postgres.NewPagination[User](db)
+
+resp, err := pagination.Offset(ctx, &postgres.RequestPaginationOffset{
+    Page:       1,
+    Size:       10,
+    Query:      "SELECT id, name, email FROM users WHERE status = :status ORDER BY created_at DESC",
+    QueryCount: "SELECT count(*) FROM users WHERE status = :status",
+    Kv:         []any{"status", "active"},
+})
+
+log.Printf("Total Pages: %d, Items: %d", resp.TotalPages, len(resp.Items))
+```
+
+### Cursor Pagination
+Ideal for infinite scroll, large datasets, and real-time feeds where data changes frequently.
+
+```go
+pagination := postgres.NewPagination[User](db)
+
+resp, err := pagination.Cursor(ctx, &postgres.RequestPaginationCursor{
+    Query:      "SELECT id, name, email, created_at FROM users WHERE status = :status",
+    QueryCount: "SELECT count(*) FROM users WHERE status = :status",
+    Size:       10,
+    Kv:         []any{"status", "active"},
+    Sorts: []postgres.SortField{
+        {Column: "created_at", Key: "created_at", IsDesc: true},
+        {Column: "id", Key: "id", IsDesc: true}, // Always include unique identifier for deterministic sorting
+    },
+    Token: "", // Pass PreviousToken or NextToken from previous response here
+})
+
+if resp.NextToken != nil {
+    log.Printf("Next Page Token: %s", *resp.NextToken)
 }
 ```
 

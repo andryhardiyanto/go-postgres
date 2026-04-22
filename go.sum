@@ -4,6 +4,10 @@ github.com/andryhardiyanto/go-async v1.0.0 h1:fyW52eeSlMsVQSe2nGk7vZzpkfXVfjjz38
 github.com/andryhardiyanto/go-async v1.0.0/go.mod h1:JeLImpv3OOMmQAqmdeTLmlJoikRi0lZ79xpcGUEagBY=
 github.com/andryhardiyanto/go-async v1.0.1 h1:CtuAMJRdKeFneKF44ggwjPcMN2nhclxDgKFqIirP8YE=
 github.com/andryhardiyanto/go-async v1.0.1/go.mod h1:u+S3tkRZF0f7E+MnjwJs+MzApDWV6IQiDhBpbzBB02E=
+github.com/andryhardiyanto/go-async v1.1.0 h1:Bt3cqzD4WJgUt5FNdbje8PEyrD0xuMsZ7ZnYf9SiEww=
+github.com/andryhardiyanto/go-async v1.1.0/go.mod h1:XSbm0Re7X35UeGeAfyGBptHlVrmx5sQ4HALBZnxH+EE=
+github.com/andryhardiyanto/go-async/v2 v2.0.0 h1:zAHYovsNON+kblS7EAlCI0ImvbXJvNbPCc+Ek3DJf24=
+github.com/andryhardiyanto/go-async/v2 v2.0.0/go.mod h1:9xvavw5OF/PTqq5mxWtJmdGHdm6SG9WBO5RW8ME5idY=
 github.com/go-sql-driver/mysql v1.8.1 h1:LedoTUt/eveggdHS9qUFC1EFSa8bU2+1pZjSRpvNJ1Y=
 github.com/go-sql-driver/mysql v1.8.1/go.mod h1:wEBSXgmK//2ZFJyE+qWnIsVGmvmEKlqwuVSjsCm7DZg=
 github.com/golang-migrate/migrate/v4 v4.18.3 h1:EYGkoOsvgHHfm5U/naS1RP/6PL/Xv3S4B/swMiAmDLs=
@@ -14,6 +18,8 @@ github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+l
 github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
 github.com/jmoiron/sqlx v1.4.0 h1:1PLqN7S1UYp5t4SrVVnt4nUVNemrDAtxlulVe+Qgm3o=
 github.com/jmoiron/sqlx v1.4.0/go.mod h1:ZrZ7UsYB/weZdl2Bxg6jCRO9c3YHl8r3ahlKmRT4JLY=
+github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
+github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
 github.com/lib/pq v1.1.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
@@ -29,3 +35,5 @@ go.uber.org/atomic v1.7.0 h1:ADUqmZGgLDDfbSL9ZmPxKTybcoEYHgpYfELNoN+7hsw=
 go.uber.org/atomic v1.7.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
 golang.org/x/sync v0.16.0 h1:ycBJEhp9p4vXvUZNszeOq0kGTPghopOL8q0fq3vstxw=
 golang.org/x/sync v0.16.0/go.mod h1:1dzgHSNfp02xaA81J2MS99Qcpr2w7fw1gpm99rleRqA=
+golang.org/x/sync v0.20.0 h1:e0PTpb7pjO8GAtTs2dQ6jYa5BWYlMuX047Dco/pItO4=
+golang.org/x/sync v0.20.0/go.mod h1:9xrNwdLfx4jkKbNva9FpL6vEN7evnE43NNNJQ2LF3+0=
