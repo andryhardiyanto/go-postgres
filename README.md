@@ -96,9 +96,9 @@ pagination := postgres.NewPagination[User](db)
 resp, err := pagination.Offset(ctx, &postgres.RequestPaginationOffset{
     Page:       1,
     Size:       10,
-    Query:      "SELECT id, name, email FROM users WHERE status = :status ORDER BY created_at DESC",
+    Query:      "SELECT id, name, email FROM users WHERE status = :status ORDER BY created_at DESC LIMIT :limit OFFSET :offset",
     QueryCount: "SELECT count(*) FROM users WHERE status = :status",
-    Kv:         []any{"status", "active"},
+    Kv:         []any{"status", "active", pagination.GetKvLimit(10), pagination.GetKvOffset(1, 10)},
 })
 
 log.Printf("Total Pages: %d, Items: %d", resp.TotalPages, len(resp.Items))

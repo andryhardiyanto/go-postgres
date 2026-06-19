@@ -7,21 +7,39 @@ import (
 	"github.com/pkg/errors"
 )
 
+type OptionPagination[T any] func(*pagination[T])
+
 type pagination[T any] struct {
-	postgres Postgres
-	debug    bool
+	postgres    Postgres
+	debug       bool
+	minPage     int
+	maxPage     int
+	minPageSize int
+	maxPageSize int
 }
 
-func NewPagination[T any](repo Postgres) Pagination[T] {
-	return &pagination[T]{
-		postgres: repo,
+func NewPagination[T any](repo Postgres, opts ...OptionPagination[T]) Pagination[T] {
+	pagination := &pagination[T]{
+		postgres:    repo,
+		minPage:     1,
+		maxPage:     100,
+		minPageSize: 10,
+		maxPageSize: 50,
 	}
+
+	for _, opt := range opts {
+		opt(pagination)
+	}
+
+	return pagination
 }
 
 type Pagination[T any] interface {
 	Debug() Pagination[T]
 	Offset(ctx context.Context, req *RequestPaginationOffset) (*ResponsePaginationOffset[T], error)
 	Cursor(ctx context.Context, req *RequestPaginationCursor) (*ResponsePaginationCursor[T], error)
+	GetKvLimit(pageSize int) []any
+	GetKvOffset(page, pageSize int) []any
 }
 
 func (p *pagination[T]) Debug() Pagination[T] {
@@ -29,16 +47,40 @@ func (p *pagination[T]) Debug() Pagination[T] {
 	return p
 }
 
+func (p *pagination[T]) getPage(page int) int {
+	if page < p.minPage {
+		page = p.minPage
+	}
+
+	if page > p.maxPage {
+		page = p.maxPage
+	}
+
+	return page
+}
+
+func (p *pagination[T]) GetKvLimit(pageSize int) []any {
+	return []any{"limit", p.getPageSize(pageSize)}
+}
+
+func (p *pagination[T]) GetKvOffset(page, pageSize int) []any {
+	return []any{"offset", (p.getPage(page) - 1) * p.getPageSize(pageSize)}
+}
+
+func (p *pagination[T]) getPageSize(pageSize int) int {
+	if pageSize < p.minPageSize {
+		pageSize = p.minPageSize
+	}
+
+	if pageSize > p.maxPageSize {
+		pageSize = p.maxPageSize
+	}
+
+	return pageSize
+}
+
 func (p *pagination[T]) Offset(ctx context.Context, req *RequestPaginationOffset) (resp *ResponsePaginationOffset[T], err error) {
 	asyncRunner := async.NewAsyncRunner()
-
-	if req.Page < 1 {
-		req.Page = 1
-	}
-
-	if req.Size < 1 {
-		req.Size = 10
-	}
 
 	var total int64
 	var items []T
@@ -83,10 +125,6 @@ func (p *pagination[T]) Offset(ctx context.Context, req *RequestPaginationOffset
 }
 
 func (p *pagination[T]) Cursor(ctx context.Context, req *RequestPaginationCursor) (*ResponsePaginationCursor[T], error) {
-	if req.Size < 1 {
-		req.Size = 10
-	}
-
 	if len(req.Sorts) == 0 {
 		return nil, errors.New("cursor sorts is required")
 	}
@@ -102,7 +140,7 @@ func (p *pagination[T]) Cursor(ctx context.Context, req *RequestPaginationCursor
 		return nil, err
 	}
 
-	limitWithExtra := req.Size + 1
+	limitWithExtra := p.getPageSize(req.Size) + 1
 	cursor.Kv = append(cursor.Kv, "limit", limitWithExtra)
 	cursor.Query += " LIMIT :limit"
 

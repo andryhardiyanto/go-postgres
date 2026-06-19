@@ -159,3 +159,29 @@ func WithConnMax(maxOpenConns int) Option {
 		c.maxOpenConns = maxOpenConns
 	}
 }
+
+// Pagination
+
+func WithMinPage[T any](min int) OptionPagination[T] {
+	return func(p *pagination[T]) {
+		p.minPage = min
+	}
+}
+
+func WithMaxPage[T any](max int) OptionPagination[T] {
+	return func(p *pagination[T]) {
+		p.maxPage = max
+	}
+}
+
+func WithMinPageSize[T any](min int) OptionPagination[T] {
+	return func(p *pagination[T]) {
+		p.minPageSize = min
+	}
+}
+
+func WithMaxPageSize[T any](max int) OptionPagination[T] {
+	return func(p *pagination[T]) {
+		p.maxPageSize = max
+	}
+}
