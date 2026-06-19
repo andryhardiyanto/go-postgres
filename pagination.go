@@ -59,10 +59,12 @@ func (p *pagination[T]) getPage(page int) int {
 	return page
 }
 
+// key limit
 func (p *pagination[T]) GetKvLimit(pageSize int) []any {
 	return []any{"limit", p.getPageSize(pageSize)}
 }
 
+// key offset
 func (p *pagination[T]) GetKvOffset(page, pageSize int) []any {
 	return []any{"offset", (p.getPage(page) - 1) * p.getPageSize(pageSize)}
 }
@@ -110,14 +112,14 @@ func (p *pagination[T]) Offset(ctx context.Context, req *RequestPaginationOffset
 		return
 	}
 
-	page := req.Page
+	req.Size = p.getPageSize(req.Size)
 
 	if len(items) == 0 {
 		items = make([]T, 0)
 	}
 
 	return &ResponsePaginationOffset[T]{
-		Page:       page,
+		Page:       p.getPage(req.Page),
 		Items:      items,
 		TotalItems: total,
 		TotalPages: req.GetTotalPages(total),
