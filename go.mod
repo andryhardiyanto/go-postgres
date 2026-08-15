@@ -1,6 +1,6 @@
 module github.com/andryhardiyanto/go-postgres
 
-go 1.26.2
+go 1.26.6
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.18.3
