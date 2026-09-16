@@ -63,7 +63,7 @@ func (p *pipeline) runPipeline(ctx context.Context, tx *sqlx.Tx, debug bool) (*E
 			return nil, fmt.Errorf("query parameters not found for query at index %d", index)
 		}
 
-		arguments, err := PairsHook(parameters, result.ids, qResult)
+		arguments, err := pairsHook(parameters, result.ids, qResult)
 		if err != nil {
 			return nil, fmt.Errorf("failed to resolve parameters for query at index %d: %w", index, err)
 		}

@@ -53,7 +53,7 @@ func (e *execQuery) Exec(ctx context.Context) (any, error) {
 	if e.pipeline.isTrans() {
 		return 0, errors.New("invalid operation: this query is part of a transaction pipeline. Please use ExecInTx() method instead of Exec() to execute transaction-based queries")
 	}
-	arguments, err := Pairs(e.keyValuePairs)
+	arguments, err := pairs(e.keyValuePairs)
 	if err != nil {
 		return 0, err
 	}

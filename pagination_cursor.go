@@ -3,7 +3,7 @@ package postgres
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -184,8 +184,6 @@ func parseTotalItems(v any) (int64, error) {
 		return x, nil
 	case string:
 		return strconv.ParseInt(x, 10, 64)
-	case json.Number:
-		return x.Int64()
 	default:
 		return 0, nil
 	}

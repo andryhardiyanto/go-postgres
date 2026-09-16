@@ -1,22 +1,15 @@
 package postgres
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"database/sql/driver"
-	"encoding/csv"
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
-)
-
-type (
-	StringSlice []string
 )
 
 var (
@@ -200,60 +193,8 @@ func delete(ctx context.Context, database *sqlx.DB, query string, arguments map[
 	return rowsAffected, nil
 }
 
-func (s *StringSlice) Scan(src any) error {
-	var str string
-	switch src := src.(type) {
-	case []byte:
-		str = string(src)
-	case string:
-		str = src
-	case nil:
-		*s = nil
-		return nil
-	}
-
-	str = quoteEscapeRegex.ReplaceAllString(str, `$1""`)
-	str = strings.ReplaceAll(str, `\\`, `\`)
-
-	str = str[1 : len(str)-1]
-
-	if len(str) == 0 {
-		*s = []string{}
-		return nil
-	}
-
-	csvReader := csv.NewReader(strings.NewReader(str))
-	slice, err := csvReader.Read()
-	if err != nil {
-		return err
-	}
-	*s = slice
-
-	return nil
-}
-
-func (s StringSlice) Value() (driver.Value, error) {
-	if len(s) == 0 {
-		return nil, nil
-	}
-
-	var buffer bytes.Buffer
-
-	buffer.WriteString("{")
-	last := len(s) - 1
-	for i, val := range s {
-		buffer.WriteString(strconv.Quote(val))
-		if i != last {
-			buffer.WriteString(",")
-		}
-	}
-	buffer.WriteString("}")
-
-	return buffer.String(), nil
-}
-
 // Pairs converts a slice of key-value pairs to a map.
-func Pairs(keyValuePairs []any) (map[string]any, error) {
+func pairs(keyValuePairs []any) (map[string]any, error) {
 	if len(keyValuePairs)%2 == 1 {
 		return nil, fmt.Errorf("invalid key-value pairs: expected even number of arguments but got %d. Key-value pairs must be provided in pairs like: key1, value1, key2, value2", len(keyValuePairs))
 	}
@@ -267,7 +208,7 @@ func Pairs(keyValuePairs []any) (map[string]any, error) {
 
 // PairsHook converts a slice of key-value pairs to a map.
 // If the value is a string and starts with the hook, it will be replaced with the value from the ids map.
-func PairsHook(keyValuePairs []any, identifiers map[string]any, hook string) (map[string]any, error) {
+func pairsHook(keyValuePairs []any, identifiers map[string]any, hook string) (map[string]any, error) {
 	if len(keyValuePairs)%2 == 1 {
 		return nil, fmt.Errorf("invalid key-value pairs: expected even number of arguments but got %d. Key-value pairs must be provided in pairs like: key1, value1, key2, value2", len(keyValuePairs))
 	}
@@ -284,13 +225,12 @@ func PairsHook(keyValuePairs []any, identifiers map[string]any, hook string) (ma
 	return arguments, nil
 }
 
-// Filter filters the slice of strings based on the map.
-func Filter(slice []string, filterMap map[string]string) (result []string) {
-	for _, value := range slice {
-		_, exists := filterMap[value]
-		if !exists {
-			result = append(result, value)
-		}
+func ToStringArray[T any](IDs []T) pq.StringArray {
+	stringArray := make(pq.StringArray, len(IDs))
+	for i, id := range IDs {
+		// Because of struct embedding, id is directly available!
+		stringArray[i] = fmt.Sprint(id)
 	}
-	return
+
+	return stringArray
 }

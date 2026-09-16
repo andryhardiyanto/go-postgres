@@ -32,7 +32,7 @@ func (query *selectQuery) Debug() Select {
 func (query *selectQuery) One(ctx context.Context) (found bool, err error) {
 	// Convert keyValuePairs to arguments map
 	if query.arguments == nil {
-		query.arguments, err = Pairs(query.keyValuePairs)
+		query.arguments, err = pairs(query.keyValuePairs)
 		if err != nil {
 			return false, err
 		}
@@ -63,7 +63,7 @@ func (query *selectQuery) One(ctx context.Context) (found bool, err error) {
 func (query *selectQuery) Many(ctx context.Context) (found bool, err error) {
 	// Convert keyValuePairs to arguments map
 	if query.arguments == nil {
-		query.arguments, err = Pairs(query.keyValuePairs)
+		query.arguments, err = pairs(query.keyValuePairs)
 		if err != nil {
 			return false, err
 		}
